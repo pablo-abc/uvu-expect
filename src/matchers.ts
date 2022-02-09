@@ -64,6 +64,8 @@ export function checkMembers(this: Context, act: any[], exp: any[]): boolean {
   if (!isArray(exp)) assert.unreachable('Expected value to be an array');
   const deep = this.flag('deep');
   const ordered = this.flag('ordered');
+  const include = this.flag('include');
+  if (!include && act.length !== exp.length) return false;
   if (ordered) {
     for (let i = 0; i < act.length; i += 1) {
       const passed = exp.every((vexp, index) => {

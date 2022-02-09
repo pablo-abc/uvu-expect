@@ -190,21 +190,21 @@ Expect('asserts type with props', () => {
 
 Expect('asserts on members', () => {
   expect([1, 2, 3]).to.have.members([3, 2, 1]);
-  expect([1, 2, 3]).to.have.members([3, 2]);
+  expect([1, 2, 3]).to.contain.members([3, 2]);
   expect([1, 2, 3]).to.not.have.ordered.members([3, 2]);
-  expect([1, 2, 3]).to.have.ordered.members([2, 3]);
+  expect([1, 2, 3]).to.contain.ordered.members([2, 3]);
   expect([1, 2, 3]).to.not.have.members([3, 2, 4]);
-  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.not.have.members([{ a: 1 }]);
-  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.have.deep.members([{ a: 1 }]);
-  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.have.deep.members([
+  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.not.contain.members([{ a: 1 }]);
+  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.contain.deep.members([{ a: 1 }]);
+  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.contain.deep.members([
     { b: 2 },
     { a: 1 },
   ]);
-  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.not.have.deep.ordered.members([
+  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.not.contain.deep.ordered.members([
     { b: 2 },
     { a: 1 },
   ]);
-  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.have.deep.ordered.members([
+  expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.contain.deep.ordered.members([
     { b: 2 },
     { c: 3 },
   ]);
