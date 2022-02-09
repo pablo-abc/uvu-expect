@@ -12,6 +12,7 @@
   },
   "author": "Pablo Berganza <pablo@berganza.dev>",
   "license": "MIT",
+  "type": "module",
   "files": [
     "dist"
   ],
@@ -37,5 +38,13 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "tslib": "^2.3.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
   }
 }
