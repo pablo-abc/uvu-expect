@@ -13,6 +13,8 @@
   },
   "author": "Pablo Berganza <pablo@berganza.dev>",
   "license": "MIT",
+  "homepage": "https://github.com/pablo-abc/uvu-expect",
+  "repository": "github:pablo-abc/uvu-expect",
   "type": "module",
   "files": [
     "dist"
