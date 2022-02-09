@@ -378,3 +378,7 @@ extend(({ extendProperty }) => {
   });
 });
 ```
+
+## Extensions
+
+If you want to make assertions like how you would with `@testing-library/jest-dom`, check out [uvu-expect-dom](https://github.com/pablo-abc/uvu-expect-dom).
