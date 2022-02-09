@@ -18,6 +18,7 @@ export function assert(
   const negate = this.flag('negate');
   const object = this.flag('object');
   const passed = negate ? !condition : condition;
+  this.clearFlags();
   if (passed) return;
   throw new Assertion({
     message: negate

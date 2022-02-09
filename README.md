@@ -56,6 +56,24 @@ expect('').to.not.be.ok;
 
 <hr />
 
+#### .empty
+
+Checks if the target is empty. For arrays and strings, checks the `length` property to be 0. For Maps and Sets, checks the `size` property to be 0. For objects, expects it to not have any own properties.
+
+```javascript
+expect('').to.be.empty;
+expect([]).to.be.empty;
+expect(new Map()).to.be.empty;
+expect(new Set()).to.be.empty;
+expect({}).to.be.empty;
+expect('not empty').to.not.be.empty;
+expect(new Set([1])).to.not.be.empty;
+expect(new Map([['a', 1]])).to.not.be.empty;
+expect({ a: 1 }).to.not.be.empty;
+```
+
+<hr />
+
 #### Checking if a value is of a specific type
 
 We offer the properties `.string`, `.number`, `.boolean`, `.object`, `.array` and `.function`.

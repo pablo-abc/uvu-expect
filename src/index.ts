@@ -92,12 +92,12 @@ function extendProperty(
   }
 }
 
-type ExtendHelpers = {
+export type ExtendExpectHelpers = {
   replaceProperty: typeof replaceProperty;
   extendProperty: typeof extendProperty;
 };
 
-export function extend(extension: (helpers: ExtendHelpers) => void) {
+export function extend(extension: (helpers: ExtendExpectHelpers) => void) {
   extension({
     replaceProperty,
     extendProperty,

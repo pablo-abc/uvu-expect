@@ -6,6 +6,16 @@ import { expect, extend } from '../src';
 
 const Expect = suite('expect');
 
+function assertThrows(fn: () => void, matcher: any) {
+  assert.throws(() => {
+    try {
+      fn();
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }, matcher);
+}
+
 Expect('tests ok assertion', () => {
   expect(null).to.not.be.ok;
   expect('truthy').to.be.ok.test;
@@ -103,20 +113,12 @@ Expect('extends expect', () => {
 
   sinon.assert.called(zaphodValidation);
 
-  assert.throws(() => {
-    try {
-      expect('arthur').to.be.zaphod;
-    } catch (err: any) {
-      throw new Error(err.message);
-    }
+  assertThrows(() => {
+    expect('arthur').to.be.zaphod;
   }, /expected to be zaphod/);
 
-  assert.throws(() => {
-    try {
-      expect('zaphod').to.not.be.zaphod;
-    } catch (err: any) {
-      throw new Error(err.message);
-    }
+  assertThrows(() => {
+    expect('zaphod').to.not.be.zaphod;
   }, /expected to not be zaphod/);
 });
 
@@ -224,6 +226,18 @@ Expect('asserts on satisfy', () => {
   expect([1, 2, 3]).to.be.an.array.that.does.not.satisfy((arr: number[]) => {
     return arr.every((value) => typeof value === 'string');
   });
+});
+
+Expect('asserts on empty', () => {
+  expect('').to.be.empty;
+  expect([]).to.be.empty;
+  expect(new Map()).to.be.empty;
+  expect(new Set()).to.be.empty;
+  expect({}).to.be.empty;
+  expect('not empty').to.not.be.empty;
+  expect(new Set([1])).to.not.be.empty;
+  expect(new Map([['a', 1]])).to.not.be.empty;
+  expect({ a: 1 }).to.not.be.empty;
 });
 
 Expect.run();

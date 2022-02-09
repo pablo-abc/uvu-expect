@@ -1,10 +1,19 @@
+function replace(key: string, value: unknown) {
+  if (value instanceof Map) {
+    return `Map<${JSON.stringify(Array.from(value.entries()))}>`;
+  } else if (value instanceof Set) {
+    return `Set<${JSON.stringify(Array.from(value))}>`;
+  } else {
+    return value;
+  }
+}
 function stringify(value: any) {
   const stringified =
     value instanceof RegExp
       ? '/' + value.source + '/'
       : typeof value === 'string'
       ? value
-      : JSON.stringify(value);
+      : JSON.stringify(value, replace);
   if (!stringified) return '';
   return '`' + stringified.replace(/,/g, ', ').replace(/:/g, ': ') + '`';
 }

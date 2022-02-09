@@ -1,7 +1,7 @@
 import type { Context, Property } from './types';
 import * as assert from 'uvu/assert';
 import { checkIncludes, checkProperty, checkMembers } from './matchers';
-import { isPlainObject } from 'lodash';
+import { isPlainObject, isEmpty, isMap, isSet, isString } from 'lodash';
 
 export const not: Property = {
   onAccess(this: Context) {
@@ -187,7 +187,6 @@ export const property: Property = {
       { expects: name }
     );
     this.flag('object', value);
-    this.clearFlags();
   },
 };
 
@@ -210,14 +209,14 @@ export const type: Property = {
       this.assert(
         Array.isArray(actual),
         'Expected #{act} to be an "array"',
-        'Expected #{act} to not be an "array"',
+        'Expected #{act} not to be an "array"',
         { actual: typeof actual, operator: 'type' }
       );
     } else if (type === 'object' && plain) {
       this.assert(
         isPlainObject(actual),
         'Expected #{act} to be a plain object',
-        'Expected #{act} to not be a plain object',
+        'Expected #{act} not to be a plain object',
         { actual: typeof actual, operator: 'type' }
       );
     } else if (not) {
@@ -291,7 +290,6 @@ export const members: Property = {
       }members #{exp}`,
       { expects: value, showDiff: !this.flag('negate') }
     );
-    this.clearFlags();
   },
 };
 
@@ -302,6 +300,25 @@ export const satisfy: Property = {
       'Expected target to satisfy validation',
       'Expected target not to satisfy validation'
     );
-    this.clearFlags();
+  },
+};
+
+export const empty: Property = {
+  onAccess(this: Context) {
+    const actual = this.flag('object');
+    if (
+      !Array.isArray(actual) &&
+      !isPlainObject(actual) &&
+      !isMap(actual) &&
+      !isString(actual) &&
+      !isSet(actual)
+    ) {
+      assert.unreachable('Target must be a string, array, object, map or set');
+    }
+    this.assert(
+      isEmpty(actual),
+      'Expected #{this} to be empty',
+      'Expected #{this} not to be empty'
+    );
   },
 };
