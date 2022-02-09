@@ -3,6 +3,7 @@
 [![NPM Version](https://img.shields.io/npm/v/uvu-expect)](https://www.npmjs.com/package/uvu-expect)
 [![NPM Downloads](https://img.shields.io/npm/dw/uvu-expect)](https://www.npmjs.com/package/uvu-expect)
 [![Tests](https://github.com/pablo-abc/uvu-expect/actions/workflows/test.yml/badge.svg)](https://github.com/pablo-abc/uvu-expect/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/pablo-abc/uvu-expect/branch/main/graph/badge.svg?token=JV9BKQJMCF)](https://codecov.io/gh/pablo-abc/uvu-expect)
 
 [Chai](https://www.chaijs.com) like BDD assertions for [uvu](https://github.com/lukeed/uvu). You _can_ perfectly use Chai with uvu, but with this package I'm attempting to have a similar syntax with a better integration.
 
