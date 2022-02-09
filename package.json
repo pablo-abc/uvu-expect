@@ -1,9 +1,10 @@
 {
   "name": "uvu-expect",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Chai like BDD assertions for uvu",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
+  "types": "dist",
   "scripts": {
     "build": "rimraf dist && NODE_ENV=production rollup -c",
     "dev": "rollup -cw",
