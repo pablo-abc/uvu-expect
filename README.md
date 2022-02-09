@@ -1,5 +1,9 @@
 # uvu-expect
 
+[![NPM Version](https://img.shields.io/npm/v/uvu-expect)](https://www.npmjs.com/package/uvu-expect)
+[![NPM Downloads](https://img.shields.io/npm/dw/uvu-expect)](https://www.npmjs.com/package/uvu-expect)
+[![Tests](https://github.com/pablo-abc/uvu-expect/actions/workflows/test.yml/badge.svg)](https://github.com/pablo-abc/uvu-expect/actions/workflows/test.yml)
+
 [Chai](https://www.chaijs.com) like BDD assertions for [uvu](https://github.com/lukeed/uvu). You _can_ perfectly use Chai with uvu, but with this package I'm attempting to have a similar syntax with a better integration.
 
 > **WARNING**: Very new package. Will most likely have breaking changes between minor versions
@@ -38,6 +42,8 @@ Assertions come in two ways: properties and methods. Properties only require to 
 
 ### Properties
 
+<hr />
+
 #### .ok
 
 Checks if the supplied value is truthy.
@@ -46,6 +52,8 @@ Checks if the supplied value is truthy.
 expect('a string').to.be.ok;
 expect('').to.not.be.ok;
 ```
+
+<hr />
 
 #### Checking if a value is of a specific type
 
@@ -67,6 +75,8 @@ expect(() => undefined).to.be.a.function;
 
 Alternatively you can use the `.type` method to do the same.
 
+<hr />
+
 #### Checking for a specific value
 
 We offer properties to check for the specific values `.true`, `.false`, `.null`, `.undefined`.
@@ -84,6 +94,8 @@ expect(null).to.not.be.undefined;
 
 ### Methods
 
+<hr />
+
 #### .equal
 
 Checks if the your target is equal (===) to the value supplied. You can add `.deep` before to check for deep equality.
@@ -95,6 +107,8 @@ expect('a string').to.equal('a string');
 expect(1).to.be.a.number.that.equals(1);
 expect('a string').not.to.equal('a different string');
 ```
+
+<hr />
 
 #### .contain
 
@@ -129,6 +143,8 @@ expect(new Set([1, 2, 3])).to.not.contain(4);
 expect([{}]).to.deeply.contain({});
 ```
 
+<hr />
+
 #### .match
 
 Asserts that your target contains the supplied sub string, or matches the supplied regular expression.
@@ -140,6 +156,8 @@ expect('zaphod and arthur').to.match('zaphod');
 expect('zaphod and arthur').to.match(/arthur/);
 expect('zaphod and arthur').to.not.match(/marvin/);
 ```
+
+<hr />
 
 #### .property
 
@@ -163,6 +181,8 @@ expect(testObj).to.have.deep.own.property('d').that.equals(3);
 expect(testObj).to.not.have.property('h');
 ```
 
+<hr />
+
 #### .type
 
 Asserts if your target is the type supplied. Same as the properties described above but as a method.
@@ -178,6 +198,8 @@ expect({}).to.be.a.plain.type('object');
 expect([]).to.be.an('array');
 ```
 
+<hr />
+
 #### .instance
 
 Asserts that your target is an instance of the specified constructor.
@@ -188,6 +210,8 @@ Alias: `.instanceOf`.
 expect(new Date()).to.be.instance(Date);
 expect(new URL('https://example.com')).to.not.be.instanceOf(Date);
 ```
+
+<hr />
 
 #### .length
 
@@ -201,6 +225,8 @@ expect('a string').to.not.have.a.lengthOf(4);
 expect([1, 2, 3]).to.have.a.length(3);
 expect([1, 2, 3]).to.not.have.a.length(4);
 ```
+
+<hr />
 
 #### .members
 
@@ -227,6 +253,8 @@ expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.have.deep.ordered.members([
   { c: 3 },
 ]);
 ```
+
+<hr />
 
 #### .satisfy
 
