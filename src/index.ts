@@ -10,25 +10,31 @@ import { assert } from './custom-assert';
 const { beTrue, beFalse, beNull, beUndefined, ...initialProperties } =
   defaultProperties;
 
-const properties: Record<string, Property | undefined> = {
-  ...initialProperties,
-  satisfies: initialProperties.satisfy,
-  equals: initialProperties.equal,
-  includes: initialProperties.include,
-  contain: initialProperties.include,
-  contains: initialProperties.include,
-  match: initialProperties.include,
-  matches: initialProperties.include,
-  a: initialProperties.type,
-  an: initialProperties.type,
-  lengthOf: initialProperties.length,
-  instanceOf: initialProperties.instance,
-  deeply: initialProperties.deep,
-  function: initialProperties.beFunction,
-  true: beTrue,
-  false: beFalse,
-  null: beNull,
-  undefined: beUndefined,
+const properties: Record<string, Property[] | undefined> = {
+  ...Object.keys(initialProperties).reduce(
+    (acc, key) => ({
+      ...acc,
+      [key]: [initialProperties[key as keyof typeof initialProperties]],
+    }),
+    {} as Record<string, Property[] | undefined>
+  ),
+  satisfies: [initialProperties.satisfy],
+  equals: [initialProperties.equal],
+  includes: [initialProperties.include],
+  contain: [initialProperties.include],
+  contains: [initialProperties.include],
+  match: [initialProperties.include],
+  matches: [initialProperties.include],
+  a: [initialProperties.type],
+  an: [initialProperties.type],
+  lengthOf: [initialProperties.length],
+  instanceOf: [initialProperties.instance],
+  deeply: [initialProperties.deep],
+  function: [initialProperties.beFunction],
+  true: [beTrue],
+  false: [beFalse],
+  null: [beNull],
+  undefined: [beUndefined],
 };
 
 export function expect(value: any) {
@@ -52,13 +58,13 @@ export function expect(value: any) {
   const proxy: any = new Proxy(properties, {
     get(target, prop) {
       if (typeof prop !== 'string') return;
-      const property = target[prop];
-      if (!property?.onAccess && !property?.onCall) return proxy;
-      property.onAccess?.call(chainContext);
-      if (property.onCall) {
+      const props = target[prop];
+      if (!props || props.length === 0) return proxy;
+      props.forEach((p) => p.onAccess?.call(chainContext));
+      if (props.some((p) => p.onCall)) {
         return new Proxy(
           function (...args: unknown[]) {
-            property.onCall?.call(chainContext, ...args);
+            props.forEach((p) => p.onCall?.call(chainContext, ...args));
             return proxy;
           },
           {
@@ -74,32 +80,41 @@ export function expect(value: any) {
   return proxy;
 }
 
-function replaceProperty(names: string | string[], handler: Property): void {
+function addProperty(names: string | string[], handler: Property): void {
   names = Array.isArray(names) ? names : [names];
   for (const name of names) {
-    properties[name] = handler;
+    if (!properties[name]) properties[name] = [handler];
+    else properties[name]!.push(handler);
   }
 }
 
-function extendProperty(
+function replaceProperty(
   names: string | string[],
   extender: (handler: Property) => Property
 ) {
   names = Array.isArray(names) ? names : [names];
   for (const name of names) {
-    const handler = properties[name] ?? {};
-    properties[name] = { ...handler, ...extender(handler) };
+    const property = properties[name] ?? [];
+    const handler: Property = {
+      onCall(this: Context, ...args: any[]) {
+        property.forEach((p) => p.onCall?.call(this, ...args));
+      },
+      onAccess(this: Context) {
+        property.forEach((p) => p.onAccess?.call(this));
+      },
+    };
+    properties[name] = [{ ...handler, ...extender(handler) }];
   }
 }
 
 export type ExtendExpectHelpers = {
+  addProperty: typeof addProperty;
   replaceProperty: typeof replaceProperty;
-  extendProperty: typeof extendProperty;
 };
 
 export function extend(extension: (helpers: ExtendExpectHelpers) => void) {
   extension({
+    addProperty,
     replaceProperty,
-    extendProperty,
   });
 }

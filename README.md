@@ -336,9 +336,9 @@ this.assert(
 );
 ```
 
-### replaceProperty
+### addProperty
 
-Completely replaces a property, or adds it if it does not exist. It expects the name (or names if you want to add aliases) of the property to add as a first argument, and a Property as a second argument.
+Adds an assertion on top of other assertions executed by the property (if it has any). The first argument is the name of the property to add. It can be an array of string if you'd like the property to have "aliases". The second argument is a property object (an object with an `onAccess` and `onCall` functions).
 
 ```javascript
 extend(({ replaceProperty }) => {
@@ -358,9 +358,9 @@ extend(({ replaceProperty }) => {
 });
 ```
 
-### extendProperty
+### overwriteProperty
 
-Allows you to extend a property by providing you with the original property value (the `onAccess` and `onCall` functions). It expects the name (or names if you want to add aliases) of the property to add as a first argument, and a function that will receive the original property as a second argument. This function should return a new property.
+Allows you to replace a property by providing you with the original property value (the `onAccess` and `onCall` functions). It expects the name (or names if you want to add aliases) of the property to add as a first argument, and a function that will receive the original property as a second argument. This function should return a new property.
 
 ```javascript
 extend(({ extendProperty }) => {

@@ -59,10 +59,10 @@ Expect('extends expect', () => {
   const onCall = sinon.fake();
   const onAccess = sinon.fake();
   const zaphodValidation = sinon.fake();
-  extend(({ replaceProperty, extendProperty }) => {
-    replaceProperty('test', { onCall, onAccess });
-    replaceProperty(['alias1', 'alias2'], { onCall, onAccess });
-    extendProperty(['test'], (handler) => {
+  extend(({ addProperty, replaceProperty }) => {
+    addProperty('test', { onCall, onAccess });
+    addProperty(['alias1', 'alias2'], { onCall, onAccess });
+    replaceProperty(['test'], (handler) => {
       return {
         onCall(value: any) {
           handler.onCall?.();
@@ -75,7 +75,7 @@ Expect('extends expect', () => {
       };
     });
 
-    extendProperty('zaphod', () => ({
+    replaceProperty('zaphod', () => ({
       onAccess(this: ExpectContext) {
         const actual = this.flag('object');
         zaphodValidation();
