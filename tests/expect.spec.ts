@@ -174,6 +174,7 @@ Expect('asserts property', () => {
   expect(testObj).to.not.have.property('d');
   expect(testObj).to.have.deep.own.property('d').that.equals(3);
   expect(testObj).to.not.have.property('h');
+  expect(testObj).to.have.nested.property('c.d').that.equals(3);
 });
 
 Expect('asserts type with props', () => {

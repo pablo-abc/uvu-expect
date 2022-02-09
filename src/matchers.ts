@@ -8,6 +8,7 @@ import {
   isEqual,
   difference,
   differenceWith,
+  get,
 } from 'lodash';
 
 export function checkIncludes(this: Context, act: any, exp: any): boolean {
@@ -48,8 +49,13 @@ export function checkProperty(
   assert.type(act, 'object');
   const own = this.flag('own');
   const deep = this.flag('deep');
-  const passed = own ? act.hasOwnProperty(exp) : !!act[exp];
-  let result = { passed, value: act[exp] };
+  const nested = this.flag('nested');
+  if (nested && own) {
+    assert.unreachable('`.nested` can not be combined with `.own`');
+  }
+  const value = nested ? get(act, exp) : act[exp];
+  const passed = own ? act.hasOwnProperty(exp) : !!value;
+  let result = { passed, value };
   if (!deep || passed) return result;
   Object.keys(act).some((key) => {
     if (!isPlainObject(act[key])) return false;

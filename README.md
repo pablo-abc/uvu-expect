@@ -180,7 +180,7 @@ expect('zaphod and arthur').to.not.match(/marvin/);
 
 #### .property
 
-Asserts that the object provided contains a property with the supplied name. Every assertion done after this will be done on the value returned from the property.
+Asserts that the object provided contains a property with the supplied name. Every assertion done after this will be done on the value returned from the property. You can use a string with dot notation (e.g. `a.b.c.1`) if you add `.nested` before.
 
 ```javascript
 const testObj = {
@@ -197,6 +197,7 @@ expect(testObj).to.have.own.property('c').that.deep.equals({ d: 3 });
 expect(testObj).to.have.own.property('a').that.equals(1);
 expect(testObj).to.not.have.property('d');
 expect(testObj).to.have.deep.own.property('d').that.equals(3);
+expect(testObj).to.have.nested.property('c.d').that.equals(3);
 expect(testObj).to.not.have.property('h');
 ```
 

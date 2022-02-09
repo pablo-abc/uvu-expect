@@ -175,15 +175,16 @@ export const property: Property = {
     const actual = this.flag('object') as object;
     const own = this.flag('own');
     const deep = this.flag('deep');
+    const nested = this.flag('nested');
     const { passed, value } = checkProperty.call(this, actual, name);
     this.assert(
       passed,
-      `Expected target to have ${deep ? 'deep ' : ''}${
-        own ? 'own ' : ''
-      }property #{exp}`,
-      `Expected target not to have ${deep ? 'deep ' : ''}${
-        own ? 'own ' : ''
-      }property #{exp}`,
+      `Expected target to have ${nested ? 'nested ' : ''}${
+        deep ? 'deep ' : ''
+      }${own ? 'own ' : ''}property #{exp}`,
+      `Expected target not to have ${nested ? 'nested ' : ''}${
+        deep ? 'deep ' : ''
+      }${own ? 'own ' : ''}property #{exp}`,
       { expects: name }
     );
     this.flag('object', value);
@@ -320,5 +321,11 @@ export const empty: Property = {
       'Expected #{this} to be empty',
       'Expected #{this} not to be empty'
     );
+  },
+};
+
+export const nested: Property = {
+  onAccess(this: Context) {
+    this.flag('nested', true);
   },
 };
