@@ -8,7 +8,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "declaration": false
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "./dist"
   },
   "include": ["src", "tests"]
 }
