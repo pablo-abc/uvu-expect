@@ -6,9 +6,16 @@ export type {
   Assert as ExpectAssert,
 } from './types';
 import { assert } from './custom-assert';
+import { Assertion } from 'uvu/assert';
 
-const { beTrue, beFalse, beNull, beUndefined, ...initialProperties } =
-  defaultProperties;
+const {
+  beTrue,
+  beFalse,
+  beNull,
+  beUndefined,
+  beFunction,
+  ...initialProperties
+} = defaultProperties;
 
 const properties: Record<string, Property | undefined> = {
   ...initialProperties,
@@ -24,14 +31,31 @@ const properties: Record<string, Property | undefined> = {
   lengthOf: initialProperties.length,
   instanceOf: initialProperties.instance,
   deeply: initialProperties.deep,
-  function: initialProperties.beFunction,
+  function: beFunction,
+  with: initialProperties.calledWith,
+  times: initialProperties.calledTimes,
   true: beTrue,
   false: beFalse,
   null: beNull,
   undefined: beUndefined,
 };
 
+function tryWithStack(fn: () => void, captured: { stack?: string }) {
+  try {
+    fn();
+  } catch (err) {
+    if (err instanceof Assertion) {
+      err.stack = captured.stack;
+      throw err;
+    }
+    throw err;
+  }
+}
+
 export function expect(value: any) {
+  const captured = {};
+
+  Error.captureStackTrace?.(captured, expect);
   const internalFlags = new Map();
   function flag(key: string, value: any) {
     if (arguments.length === 1) return internalFlags.get(key);
@@ -54,11 +78,15 @@ export function expect(value: any) {
       if (typeof prop !== 'string') return;
       const property = target[prop];
       if (!property?.onAccess && !property?.onCall) return proxy;
-      property.onAccess?.call(chainContext);
+      tryWithStack(() => {
+        property.onAccess?.call(chainContext);
+      }, captured);
       if (property.onCall) {
         return new Proxy(
           function (...args: unknown[]) {
-            property.onCall?.apply(chainContext, args);
+            tryWithStack(() => {
+              property.onCall?.apply(chainContext, args);
+            }, captured);
             return proxy;
           },
           {
@@ -71,19 +99,24 @@ export function expect(value: any) {
       return proxy;
     },
   });
+
   return proxy;
 }
 
 function addProperty(names: string | string[], handler: Property): void {
   names = Array.isArray(names) ? names : [names];
   for (const name of names) {
-    if (!properties[name]) properties[name] = handler;
-    else {
+    const originalHandler = properties[name];
+    if (!originalHandler) {
+      properties[name] = handler;
+    } else {
       properties[name] = {
         onAccess(this: Context) {
+          originalHandler.onAccess?.call(this);
           handler.onAccess?.call(this);
         },
         onCall(this: Context, ...args: any[]) {
+          originalHandler.onCall?.apply(this, args);
           handler.onCall?.apply(this, args);
         },
       };

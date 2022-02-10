@@ -1,4 +1,5 @@
 import * as sinon from 'sinon';
+import { spy } from 'tinyspy';
 import * as assert from 'uvu/assert';
 import { suite } from 'uvu';
 import type { ExpectContext } from '../src';
@@ -6,11 +7,12 @@ import { expect, extend } from '../src';
 
 const Expect = suite('expect');
 
-function assertThrows(fn: () => void, matcher: any) {
+function assertThrows(fn: () => void, matcher?: any) {
   assert.throws(() => {
     try {
       fn();
     } catch (err: any) {
+      if (!(err instanceof assert.Assertion)) return;
       throw new Error(err.message);
     }
   }, matcher);
@@ -18,13 +20,20 @@ function assertThrows(fn: () => void, matcher: any) {
 
 Expect('tests ok assertion', () => {
   expect(null).to.not.be.ok;
-  expect('truthy').to.be.ok.test;
+  assertThrows(() => expect(null).to.be.ok, /Expected value to be truthy/);
+  expect('truthy').to.be.ok;
+  assertThrows(() => expect('truthy').to.not.be.ok);
 });
 
 Expect('equal assertion', () => {
   expect('test').to.equal('test');
+  assertThrows(() => expect('test').to.not.equal('test'));
   expect('test').to.not.equal('wrong');
+  assertThrows(() => expect('test').to.equal('wrong'));
   expect({ deep: 'value' }).to.deep.equal({ deep: 'value' });
+  assertThrows(() =>
+    expect({ deep: 'value' }).not.deep.equal({ deep: 'value' })
+  );
   expect({ deep: 'value' })
     .to.not.equal({ deep: 'value' })
     .and.deep.equal({ deep: 'value' });
@@ -32,22 +41,37 @@ Expect('equal assertion', () => {
 
 Expect('true, false, undefined and null assertions', () => {
   expect(true).to.be.true;
+  assertThrows(() => expect(true).to.not.be.true);
   expect(false).to.not.be.true;
+  assertThrows(() => expect(false).to.be.true);
   expect(false).to.be.false;
+  assertThrows(() => expect(false).to.not.be.false);
   expect(true).to.not.be.false;
+  assertThrows(() => expect(true).to.be.false);
   expect(null).to.be.null;
+  assertThrows(() => expect(null).to.not.be.null);
   expect(undefined).to.not.be.null;
+  assertThrows(() => expect(undefined).to.be.null);
   expect(undefined).to.be.undefined;
+  assertThrows(() => expect(undefined).to.not.be.undefined);
   expect(null).to.not.be.undefined;
+  assertThrows(() => expect(null).to.be.undefined);
 });
 
 Expect('type assertion', () => {
   expect('string').to.be.a('string');
+  assertThrows(() => expect('string').to.be.a('number'));
   expect(1).to.be.type('number');
+  assertThrows(() => expect(1).to.be.type('string'));
   expect('string').to.not.be.a('number');
+  assertThrows(() => expect('string').to.be.a('number'));
   expect({}).to.be.an('object');
+  assertThrows(() => expect(() => undefined).to.be.an('object'));
+  expect([]).to.be.an('object');
+  assertThrows(() => expect([]).to.be.a.plain.type('object'));
   expect({}).to.be.a.plain.type('object');
   expect([]).to.be.an('array');
+  assertThrows(() => expect({}).to.be.an('array'));
 });
 
 Expect('instance assertion', () => {
@@ -61,6 +85,7 @@ Expect('extends expect', () => {
   const zaphodValidation = sinon.fake();
   extend(({ addProperty, replaceProperty }) => {
     addProperty('test', { onCall, onAccess });
+    addProperty(['equals', 'equal'], { onCall, onAccess });
     addProperty(['alias1', 'alias2'], { onCall, onAccess });
     replaceProperty(['test'], (handler) => {
       return {
@@ -87,6 +112,12 @@ Expect('extends expect', () => {
       },
     }));
   });
+  expect('value').to.not.equal('not value');
+  expect(onCall).to.have.been.called.once;
+  expect(onAccess).to.have.been.called.once;
+  assertThrows(() => expect('value').to.equal('not value'));
+  onCall.resetHistory();
+  onAccess.resetHistory();
 
   expect({}).to.test;
 
@@ -150,12 +181,15 @@ Expect('assert object and array include', () => {
     e: [1, 2, 3],
   };
   expect(testObj).to.contain({ a: 1 });
+  assertThrows(() => expect(testObj).to.contain({ d: 3 }));
   expect(testObj).to.deeply.contain({ d: 3 });
   expect(testObj).to.contain({ e: [1, 2, 3] });
   expect(new Set([1, 2, 3])).to.contain(2);
   expect(new Set([1, 2, 3])).to.not.contain(4);
+  assertThrows(() => expect([{}]).to.contain({}));
   expect([{}]).to.deeply.contain({});
   expect(['arthur']).to.match(/art/);
+  assertThrows(() => expect(['arthur']).to.match(/marvin/));
 });
 
 Expect('asserts property', () => {
@@ -172,6 +206,11 @@ Expect('asserts property', () => {
   expect(testObj).to.have.own.property('c').that.deep.equals({ d: 3 });
   expect(testObj).to.have.own.property('a').that.equals(1);
   expect(testObj).to.not.have.property('d');
+  assertThrows(() => expect(testObj).to.have.property('d'));
+  assertThrows(
+    () => expect(testObj).to.have.nested.own.property('c.d'),
+    /can not be combined with/
+  );
   expect(testObj).to.have.deep.own.property('d').that.equals(3);
   expect(testObj).to.not.have.property('h');
   expect(testObj).to.have.nested.property('c.d').that.equals(3);
@@ -216,6 +255,8 @@ Expect('asserts on length', () => {
   expect('a string').to.not.have.a.lengthOf(4);
   expect([1, 2, 3]).to.have.a.length(3);
   expect([1, 2, 3]).to.not.have.a.length(4);
+  expect(new Set([1, 2, 2])).to.have.length(2);
+  assertThrows(() => expect({}).to.have.length(2));
 });
 
 Expect('asserts on satisfy', () => {
@@ -227,6 +268,12 @@ Expect('asserts on satisfy', () => {
   expect([1, 2, 3]).to.be.an.array.that.does.not.satisfy((arr: number[]) => {
     return arr.every((value) => typeof value === 'string');
   });
+  assertThrows(() => expect({}).to.satisfy(() => false));
+  assert.throws(() =>
+    expect({}).to.satisfy(() => {
+      throw new Error('A message');
+    })
+  );
 });
 
 Expect('asserts on empty', () => {
@@ -237,8 +284,61 @@ Expect('asserts on empty', () => {
   expect({}).to.be.empty;
   expect('not empty').to.not.be.empty;
   expect(new Set([1])).to.not.be.empty;
+  assertThrows(() => expect(new Set([1])).to.be.empty);
   expect(new Map([['a', 1]])).to.not.be.empty;
   expect({ a: 1 }).to.not.be.empty;
+  assertThrows(() => expect(() => undefined).to.be.empty);
+});
+
+Expect('asserts called function', () => {
+  const tspy = spy();
+  const sspy = sinon.fake();
+  assertThrows(() => expect(() => undefined).to.have.not.been.called);
+  assertThrows(() => expect(() => undefined).to.have.been.called);
+  expect(tspy).to.have.not.been.called;
+  assertThrows(() => expect(tspy).to.have.been.called);
+  expect(sspy).to.have.not.been.called;
+  assertThrows(() => expect(sspy).to.have.been.called);
+  tspy(1, 2, 3);
+  sspy(1, 2, 3);
+  expect(tspy).to.have.been.called.with(1, 2, 3);
+  expect(tspy).to.have.been.called.but.not.with(1, 2, 4);
+  expect(tspy).to.have.not.been.calledWith(1, 2, 4);
+  expect(tspy).to.have.been.called.times(1);
+  expect(tspy).to.have.not.been.calledTimes(2);
+  expect(tspy).to.have.been.called.once;
+  assertThrows(() => {
+    expect(tspy).to.have.been.nth(2).called.with(1, 2, 3);
+  }, /The function has not been called enough times/);
+  assertThrows(() => expect(tspy).to.have.been.called.times(2));
+  assertThrows(() => expect(tspy).to.not.have.been.called);
+  assertThrows(() => expect(tspy).to.not.have.been.called.twice);
+  assertThrows(() => expect(tspy).to.not.have.been.called.thrice);
+  expect(sspy).to.have.been.called.with(1, 2, 3);
+  expect(sspy).to.have.been.called.but.not.with(1, 2, 4);
+  expect(sspy).to.have.been.called.times(1);
+  expect(sspy).to.have.been.called.once;
+  assertThrows(() => {
+    expect(sspy).to.have.been.nth(2).called.with(1, 2, 3);
+  }, /The function has not been called enough times/);
+  assertThrows(() => expect(sspy).to.have.been.called.times(2));
+  assertThrows(() => expect(sspy).to.not.have.been.called);
+  assertThrows(() => expect(sspy).to.not.have.been.called.twice);
+  assertThrows(() => expect(sspy).to.not.have.been.called.thrice);
+  tspy(2, 3, [1]);
+  sspy(2, 3, [1]);
+  expect(tspy).to.have.been.called.twice;
+  expect(tspy).to.have.been.nth(1).called.with(1, 2, 3);
+  expect(tspy).to.have.been.last.called.with(2, 3, [1]);
+  assertThrows(() => expect(tspy).to.have.been.last.called.with(1, 2, 3));
+  expect(sspy).to.have.been.called.twice;
+  expect(sspy).to.have.been.nth(1).called.with(1, 2, 3);
+  expect(sspy).to.have.been.last.called.with(2, 3, [1]);
+  assertThrows(() => expect(sspy).to.have.been.last.called.with(1, 2, 3));
+  tspy();
+  sspy();
+  expect(tspy).to.have.been.called.thrice;
+  expect(sspy).to.have.been.called.thrice;
 });
 
 Expect.run();

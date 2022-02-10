@@ -25,6 +25,12 @@ yarn add -D uvu-expect
 
 ## Usage
 
+Unlike Jest, `expect` is not available globally but needs to be imported:
+
+```javascript
+import { expect } from 'uvu-expect';
+```
+
 This package works much like Chai. You pass the value you want to validate to `expect` and chain assertions to it.
 
 ```javascript
@@ -291,6 +297,80 @@ expect([1, 2, 3]).to.be.an.array.that.does.not.satisfy((arr: number[]) => {
 });
 ```
 
+### Assertions on function mocks
+
+Besides the previously mentioned assertions, we provide some assertions that work nicely with [tinyspy][tinyspy] and [sinonjs][sinonjs] (or any other mock library that shares a similar API).
+
+<hr />
+
+#### .called
+
+Allows you to assert if a function has been called.
+
+```javascript
+import { expect } from 'uvu-expect';
+import { spy } from 'tinyspy';
+
+const mockFn = spy();
+expect(mockFn).not.to.have.been.called;
+mockFn();
+expect(mockFn).to.have.been.called;
+```
+
+<hr />
+
+#### .times
+
+Method that allows you to assert if a function has been called a specific amount of times.
+
+Alias: `.calledTimes`
+
+```javascript
+const mockFn = spy();
+expect(mockFn).not.to.have.been.called;
+mockFn();
+expect(mockFn).to.have.been.called.times(1);
+expect(mockFn).to.have.been.called.but.not.times(2);
+expect(mockFn).to.have.not.been.calledTimes(2);
+```
+
+You may use `.once`, `.twice` and `.thrice` instead of `.times(1)`, `.times(2)` and `.times(3)` respectively.
+
+```javascript
+const mockFn = spy();
+expect(mockFn).not.to.have.been.called;
+mockFn();
+expect(mockFn).to.have.been.called.once;
+mockFn();
+expect(mockFn).to.have.been.called.twice;
+mockFn();
+expect(mockFn).to.have.been.called.thrice;
+```
+
+<hr />
+
+#### .with
+
+Allows you to assert if a function has been called with the specified arguments. You may use `.nth` somewhere before to restrict it to a specific call. You may also use `.last` before to restrict it to the last call.
+
+Alias: `.calledWith`.
+
+```javascript
+const mockFn = spy();
+
+mockFn(1);
+mockFn(1, 2);
+mockFn(1, 2, 3);
+
+expect(mockFn).to.have.been.called.with(1);
+expect(mockFn).to.have.been.called.with(1, 2);
+expect(mockFn).to.have.been.called.with(1, 2, 3);
+expect(mockFn).to.have.been.nth(1).called.with(1);
+expect(mockFn).to.have.been.nth(2).called.not.with(1, 2, 3);
+expect(mockFn).to.have.not.been.nth(2).calledWith(1, 2, 3);
+expect(mockFn).to.have.been.last.called.with(1, 2, 3);
+```
+
 ## Adding custom assertions (plugins)
 
 You can add properties and methods to this package by using `extend`. It expects a function that will receive two helpers: `replaceProperty` and `extendProperty`.
@@ -350,9 +430,6 @@ extend(({ replaceProperty }) => {
         'expected to be zaphod',
         'expected to not be zaphod'
       );
-
-      // we clear flags so further assertions are not modified
-      this.clearFlags();
     }
   });
 });
@@ -382,3 +459,6 @@ extend(({ extendProperty }) => {
 ## Extensions
 
 If you want to make assertions like how you would with `@testing-library/jest-dom`, check out [uvu-expect-dom](https://github.com/pablo-abc/uvu-expect-dom).
+
+[tinyspy]: https://github.com/Aslemammad/tinyspy
+[sinonjs]: https://sinonjs.org

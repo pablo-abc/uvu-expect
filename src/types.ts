@@ -1,3 +1,4 @@
+import type { SinonSpyCall } from 'sinon';
 export type Assert = (
   this: Context,
   condition: boolean,
@@ -21,3 +22,19 @@ export type Property = {
   onAccess?(): void;
   onCall?(...args: unknown[]): void;
 };
+
+export type TinySpy = {
+  called: boolean;
+  callCount: number;
+  calls: any[][];
+  returns: any[];
+} & Function;
+
+export type SinonSpy = {
+  called: boolean;
+  callCount: number;
+  getCall(nth: number): SinonSpyCall<any, any>;
+  getCalls(): SinonSpyCall<any, any>[];
+} & Function;
+
+export type SpyFn = TinySpy | SinonSpy;

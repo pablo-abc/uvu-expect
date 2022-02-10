@@ -1,7 +1,16 @@
-import type { Context, Property } from './types';
+import type { Context, Property, SpyFn } from './types';
 import * as assert from 'uvu/assert';
 import { checkIncludes, checkProperty, checkMembers } from './matchers';
-import { isPlainObject, isEmpty, isMap, isSet, isString } from 'lodash';
+import {
+  isPlainObject,
+  isEmpty,
+  isMap,
+  isSet,
+  isString,
+  isArray,
+  isEqual,
+} from 'lodash';
+import { isSpyFn } from './utils';
 
 export const not: Property = {
   onAccess(this: Context) {
@@ -43,20 +52,32 @@ export const deep: Property = {
 
 export const length: Property = {
   onAccess(this: Context) {
-    this.flag('length', true);
+    const actual = this.flag('object') as
+      | any[]
+      | Set<any>
+      | Map<any, any>
+      | string;
+    let n;
+    if (isArray(actual) || isString(actual)) {
+      n = actual.length;
+    } else if (isMap(actual) || isSet(actual)) {
+      n = actual.size;
+    }
+    this.flag('length', n);
   },
   onCall(this: Context, size: number) {
-    const actual = this.flag('object');
-    if (!Array.isArray(actual) && typeof actual !== 'string') {
+    const actual = this.flag('actual');
+    const n = this.flag('length');
+    if (typeof n !== 'number') {
       return assert.unreachable(
-        `Expected "${typeof actual}" to be an "array" or "string"`
+        `Expected "${typeof actual}" to be an "array", "string", "map" or "set`
       );
     }
     this.assert(
-      actual.length === size,
+      n === size,
       'Expected array to have length #{exp}',
       'Expected array not to have length #{exp}',
-      { expects: size, actual: actual.length, showDiff: !this.flag('negate') }
+      { expects: size, actual: n, showDiff: !this.flag('negate') }
     );
     this.clearFlags();
   },
@@ -327,5 +348,112 @@ export const empty: Property = {
 export const nested: Property = {
   onAccess(this: Context) {
     this.flag('nested', true);
+  },
+};
+
+export const called: Property = {
+  onAccess(this: Context) {
+    const actual = this.flag('object');
+    const nth = this.flag('nth');
+    const last = this.flag('last');
+    if (!isSpyFn(actual)) return;
+    this.assert(
+      actual.called,
+      'Expected function to have been called',
+      'Expected function not to have been called'
+    );
+    this.flag('nth', nth);
+    this.flag('last', last);
+  },
+};
+
+export const calledTimes: Property = {
+  onAccess(this: Context) {
+    const actual = this.flag('object');
+    if (!isSpyFn(actual)) return;
+    this.flag('length', actual.callCount);
+  },
+  onCall(this: Context, size: number) {
+    const callCount = this.flag('length') as number;
+    this.assert(
+      callCount === size,
+      'Expected function to have been called #{exp} times',
+      'Expected function not to have been called #{exp} times',
+      { expects: size, actual: callCount, showDiff: !this.flag('negate') }
+    );
+  },
+};
+
+export const once: Property = {
+  onAccess(this: Context) {
+    calledTimes.onAccess?.call(this);
+    calledTimes.onCall?.call(this, 1);
+  },
+};
+
+export const twice: Property = {
+  onAccess(this: Context) {
+    calledTimes.onAccess?.call(this);
+    calledTimes.onCall?.call(this, 2);
+  },
+};
+
+export const thrice: Property = {
+  onAccess(this: Context) {
+    calledTimes.onAccess?.call(this);
+    calledTimes.onCall?.call(this, 3);
+  },
+};
+
+export const calledWith: Property = {
+  onCall(this: Context, ...args: any[]) {
+    const actual = this.flag('object');
+    const last = this.flag('last');
+    if (!isSpyFn(actual)) return;
+    let calls: any[][];
+    if ('getCalls' in actual) {
+      calls = actual.getCalls().map((c) => c.args);
+    } else {
+      calls = actual.calls;
+    }
+    const callNumber = last ? calls.length : (this.flag('nth') as number);
+    if (!actual.called || (callNumber && calls.length < callNumber)) {
+      assert.unreachable('The function has not been called enough times');
+    }
+    if (callNumber) {
+      this.assert(
+        isEqual(calls[callNumber - 1], args),
+        'Expected function to have been called with #{exp} on ' + last
+          ? 'last call'
+          : `call number ${callNumber}`,
+        'Expected function not to have been called with #{exp} on ' + last
+          ? 'last call'
+          : `call number ${callNumber}`,
+        {
+          actual: calls[callNumber - 1],
+          expects: args,
+          showDiff: !this.flag('negate'),
+        }
+      );
+    } else {
+      this.assert(
+        calls.some((a) => isEqual(a, args)),
+        'Expected function to have been called with #{exp}',
+        'Expected function not to have been called with #{exp}',
+        { expects: args }
+      );
+    }
+  },
+};
+
+export const nth: Property = {
+  onCall(this: Context, n: number) {
+    this.flag('nth', n);
+  },
+};
+
+export const last: Property = {
+  onAccess(this: Context) {
+    this.flag('last', true);
   },
 };
