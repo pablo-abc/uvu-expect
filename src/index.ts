@@ -16,6 +16,7 @@ const {
   beNull,
   beUndefined,
   beFunction,
+  beNaN,
   ...initialProperties
 } = defaultProperties;
 
@@ -39,6 +40,7 @@ const properties: Record<string, Property | undefined> = {
   false: beFalse,
   null: beNull,
   undefined: beUndefined,
+  NaN: beNaN,
 };
 
 function tryWithStack(

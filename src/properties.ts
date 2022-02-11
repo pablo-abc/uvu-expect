@@ -515,3 +515,15 @@ export const last: Property = {
     this.flag('last', true);
   },
 };
+
+export const beNaN: Property = {
+  onAccess(this: Context) {
+    const actual = this.flag('object');
+    this.assert(
+      Number.isNaN(actual),
+      'Expected value to be NaN',
+      'Expected value not to be NaN',
+      { operator: this.flag('negate') ? 'not.NaN' : 'NaN' }
+    );
+  },
+};

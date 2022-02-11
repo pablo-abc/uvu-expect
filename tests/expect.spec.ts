@@ -96,6 +96,10 @@ Expect('true, false, undefined and null assertions', () => {
   assertThrows(() => expect(undefined).to.not.be.undefined);
   expect(null).to.not.be.undefined;
   assertThrows(() => expect(null).to.be.undefined);
+  expect(NaN).to.be.NaN;
+  expect(1).not.to.be.NaN;
+  expect('asd').to.not.be.NaN;
+  assertThrows(() => expect(NaN).to.not.be.NaN);
 });
 
 Expect('type assertion', () => {
