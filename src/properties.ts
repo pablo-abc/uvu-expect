@@ -49,6 +49,7 @@ export const include: Property = {
       } else {
         assert.match(actual, value);
       }
+      clearTimeout(this.timeout);
     } else {
       const deep = this.flag('deep') as boolean;
       this.assert(
@@ -110,6 +111,7 @@ export const beTrue: Property = {
     } else {
       assert.is(actual, true);
     }
+    clearTimeout(this.timeout);
     this.clearFlags();
   },
 };
@@ -123,6 +125,7 @@ export const beFalse: Property = {
     } else {
       assert.is(actual, false);
     }
+    clearTimeout(this.timeout);
     this.clearFlags();
   },
 };
@@ -136,6 +139,7 @@ export const beNull: Property = {
     } else {
       assert.is(actual, null);
     }
+    clearTimeout(this.timeout);
     this.clearFlags();
   },
 };
@@ -149,6 +153,7 @@ export const beUndefined: Property = {
     } else {
       assert.is(actual, undefined);
     }
+    clearTimeout(this.timeout);
     this.clearFlags();
   },
 };
@@ -162,6 +167,7 @@ export const ok: Property = {
     } else {
       assert.ok(actual);
     }
+    clearTimeout(this.timeout);
     this.clearFlags();
   },
 };
@@ -210,6 +216,7 @@ export const instance: Property = {
     } else {
       assert.instance(actual, constructor);
     }
+    clearTimeout(this.timeout);
     this.clearFlags();
   },
 };
@@ -275,6 +282,7 @@ export const type: Property = {
     } else {
       assert.type(actual, type);
     }
+    clearTimeout(this.timeout);
     this.clearFlags();
   },
 };

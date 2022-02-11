@@ -18,6 +18,7 @@ export type Context = {
   flag(key: string, value?: any): unknown;
   clearFlags(): void;
   assert: Assert;
+  timeout: NodeJS.Timeout;
 };
 
 export type Property = {
@@ -41,6 +42,9 @@ export type SinonSpy = {
 
 export type SpyFn = TinySpy | SinonSpy;
 
-export type Expect = ((value: any) => any) & {
+export type Expect = ((
+  value: any,
+  options?: { disableNoAssertionWarning: boolean }
+) => any) & {
   match: SinonMatch;
 };

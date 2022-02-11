@@ -1,3 +1,4 @@
+import kleur from 'kleur';
 import * as defaultProperties from './properties';
 import type { Context, Property, Expect } from './types';
 export type {
@@ -40,22 +41,52 @@ const properties: Record<string, Property | undefined> = {
   undefined: beUndefined,
 };
 
-function tryWithStack(fn: () => void, captured: { stack?: string }) {
+function tryWithStack(
+  this: Context,
+  fn: () => void,
+  captured: { stack?: string; assertion: string[] }
+) {
   try {
     fn();
   } catch (err) {
+    clearTimeout(this.timeout);
     if (err instanceof Assertion) {
-      err.stack = captured.stack;
+      const operator = captured.assertion
+        .map((a) => a.replace('(...)', ''))
+        .filter((a) => a && Object.keys(properties).includes(a))
+        .join('.');
+      err.operator = kleur.bold(operator);
+      if (captured.stack) err.stack = captured.stack;
       throw err;
     }
     throw err;
   }
 }
 
-export function expectFn(value: any) {
-  const captured = {};
+export function expectFn(
+  value: any,
+  { disableNoAssertionWarning } = { disableNoAssertionWarning: false }
+) {
+  const captured: { stack?: string; assertion: string[] } = {
+    assertion: [],
+  };
 
   Error.captureStackTrace?.(captured, expect);
+  const timeout = setTimeout(() => {
+    if (disableNoAssertionWarning) return;
+    console.warn(
+      kleur
+        .bold()
+        .underline()
+        .red('No assertion was done on one of your `expect` calls.')
+    );
+    console.warn('');
+    console.warn('Make sure you have no typos on your assertion:');
+    console.warn(kleur.yellow('expect(...).' + captured.assertion.join('.')));
+    console.warn('');
+    console.warn(kleur.gray(captured.stack ?? ''));
+  });
+
   const internalFlags = new Map();
   function flag(key: string, value: any) {
     if (arguments.length === 1) return internalFlags.get(key);
@@ -70,6 +101,7 @@ export function expectFn(value: any) {
   }
   const chainContext = {
     flag,
+    timeout,
   } as Context;
   chainContext.clearFlags = clearFlags.bind(chainContext);
   chainContext.assert = assert.bind(chainContext);
@@ -77,27 +109,33 @@ export function expectFn(value: any) {
   const proxy: any = new Proxy(properties, {
     get(target, prop) {
       if (typeof prop !== 'string') return;
+      captured.assertion.push(prop);
       const property = target[prop];
-      if (!property?.onAccess && !property?.onCall) return proxy;
-      tryWithStack(() => {
-        property.onAccess?.call(chainContext);
-      }, captured);
-      if (property.onCall) {
-        return new Proxy(
-          function (...args: unknown[]) {
-            tryWithStack(() => {
-              property.onCall?.apply(chainContext, args);
-            }, captured);
-            return proxy;
-          },
-          {
-            get(_, prop) {
-              return proxy[prop];
+      tryWithStack.call(
+        chainContext,
+        () => {
+          property?.onAccess?.call(chainContext);
+        },
+        captured
+      );
+      return new Proxy(
+        function (...args: unknown[]) {
+          captured.assertion.splice(-1, 1, `${prop}(...)`);
+          tryWithStack.call(
+            chainContext,
+            () => {
+              property?.onCall?.apply(chainContext, args);
             },
-          }
-        );
-      }
-      return proxy;
+            captured
+          );
+          return proxy;
+        },
+        {
+          get(_, prop) {
+            return proxy[prop];
+          },
+        }
+      );
     },
   });
 

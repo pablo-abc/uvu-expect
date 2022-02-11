@@ -478,8 +478,15 @@ extend(({ replaceProperty }) => {
   replaceProperty(['equal', 'equals'], (handler) => {
     return {
       onCall(value) {
-        if (value === 'zaphod') throw new Error('no');
-        handler.onCall?.(value);
+        if (typeof value === 'string') {
+          this.assert(
+            value === 'zaphod',
+            'expected to be zaphod',
+            'expected to not be zaphod'
+          );
+        } else {
+          handler.onCall?.(value);
+        }
       },
       onAccess() {
         handler.onAccess?.();

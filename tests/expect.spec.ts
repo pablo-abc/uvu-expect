@@ -88,14 +88,21 @@ Expect('extends expect', () => {
   extend(({ addProperty, replaceProperty }) => {
     addProperty('test', { onCall, onAccess });
     addProperty(['equals', 'equal'], { onCall, onAccess });
-    addProperty(['alias1', 'alias2'], { onCall, onAccess });
+    addProperty(['alias1', 'alias2'], {
+      onCall,
+      onAccess(this: any) {
+        clearTimeout(this.timeout);
+        onAccess.call(this);
+      },
+    });
     replaceProperty(['test'], (handler) => {
       return {
         onCall(value: any) {
           handler.onCall?.();
           onCall(value);
         },
-        onAccess() {
+        onAccess(this: any) {
+          clearTimeout(this.timeout);
           handler.onAccess?.();
           onAccess();
         },
@@ -155,8 +162,15 @@ Expect('extends expect', () => {
   }, /expected to not be zaphod/);
 });
 
-Expect('only proxies handles strings', () => {
+Expect('only proxies string props and warns on no assertion', async () => {
+  const mockWarn = sinon.fake();
+  const origWarn = console.warn;
+  console.warn = mockWarn;
   assert.is(expect({})[Symbol()], undefined);
+  await new Promise((r) => setTimeout(r));
+
+  console.warn = origWarn;
+  expect(mockWarn).to.have.been.called;
 });
 
 Expect('asserts inclusion of string and arrays', () => {

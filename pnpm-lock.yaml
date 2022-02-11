@@ -7,6 +7,7 @@ specifiers:
   '@sinonjs/samsam': ^6.1.1
   '@types/lodash': ^4.14.178
   '@types/sinon': ^10.0.11
+  kleur: ^4.1.4
   lodash: ^4.17.21
   nyc: ^15.1.0
   prettier: ^2.5.1
@@ -22,6 +23,7 @@ specifiers:
 
 dependencies:
   '@sinonjs/samsam': 6.1.1
+  kleur: 4.1.4
   lodash: 4.17.21
   tslib: 2.3.1
 
@@ -1172,7 +1174,6 @@ packages:
   /kleur/4.1.4:
     resolution: {integrity: sha512-8QADVssbrFjivHWQU7KkMgptGTl6WAcSdlbBPY4uNF+mWr6DGcKrvY2w4FQJoXch7+fKMjj0dRrL75vk3k23OA==}
     engines: {node: '>=6'}
-    dev: true
 
   /locate-path/5.0.0:
     resolution: {integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==}

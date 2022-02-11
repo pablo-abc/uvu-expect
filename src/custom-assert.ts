@@ -22,6 +22,7 @@ export function assert(
     keepFlags?: boolean;
   } = {}
 ) {
+  clearTimeout(this.timeout);
   const negate = this.flag('negate');
   const object = this.flag('object');
   const passed = negate ? !condition : condition;
