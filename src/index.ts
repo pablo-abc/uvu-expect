@@ -84,6 +84,16 @@ function setupNoAssertionWarning(captured: {
   });
 }
 
+let noAssertionGloballyDisabled = false;
+
+export function disableNoAssertionWarnings() {
+  noAssertionGloballyDisabled = true;
+}
+
+export function enableNoAssertionWarnings() {
+  noAssertionGloballyDisabled = false;
+}
+
 export function expectFn(
   value: any,
   { disableNoAssertionWarning } = { disableNoAssertionWarning: false }
@@ -96,7 +106,7 @@ export function expectFn(
 
   Error.captureStackTrace?.(captured, expect);
 
-  if (!disableNoAssertionWarning) {
+  if (!disableNoAssertionWarning && !noAssertionGloballyDisabled) {
     timer.timeout = setupNoAssertionWarning(captured);
   }
 

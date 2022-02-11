@@ -443,6 +443,8 @@ expect(...).to.do.nothing
 
 Your tests will still pass, but it will be obvious if you missed anything.
 
+In case of false positives, you can globally disable this behaviour by calling the exported function `disableNoAssertionWarnings`, and you can enable them again by calling `enableNoAssertionWarnings`. You can disable it for a specific `expect` call by passing an object as a second argument to expect: `{ disableNoAssertionWarning: true }`.
+
 ## Adding custom assertions (plugins)
 
 You can add properties and methods to this package by using `extend`. It expects a function that will receive two helpers: `replaceProperty` and `extendProperty`.
