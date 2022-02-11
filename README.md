@@ -467,7 +467,7 @@ const negated = this.flag('negate');
 this.flag('negate', true);
 ```
 
-The target you're validation can be accessed through the flag `object`.
+The target you're validating can be accessed through the flag `object`.
 
 ### this.assert
 
@@ -480,6 +480,7 @@ A method that can be accessed on `onCall` and `onAccess` that will throw an asse
   - `expects`: the value expected.
   - `actual`: your actual value being validated, which defaults to `this.flag('object')`.
   - `showDiff`: indicates if the error should show a diff (built from `expects` and `actual`). Defaults to `false`.
+  - `keepFlags`: a call to `this.assert` will "consume" all flags previously set. If you want to prevent this behaviour, set this property to `true`. Note that this is handled automatically when using `addProperty`, and should not be an issue when _replacing_ a handler with `replaceProperty`.
 
 ```javascript
 this.assert(

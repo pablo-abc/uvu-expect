@@ -1,13 +1,11 @@
 import * as assert from 'uvu/assert';
 import type { Context } from './types';
-import {
-  isPlainObject,
-  isArray,
-  isSet,
-  difference,
-  differenceWith,
-  get,
-} from 'lodash';
+import isPlainObject from 'lodash/isPlainObject';
+import isArray from 'lodash/isArray';
+import isSet from 'lodash/isSet';
+import difference from 'lodash/difference';
+import differenceWith from 'lodash/differenceWith';
+import get from 'lodash/get';
 import { deepEqual, match as isMatch } from '@sinonjs/samsam';
 
 export function checkIncludes(this: Context, act: any, exp: any): boolean {

@@ -1,14 +1,12 @@
 import type { Context, Property } from './types';
 import * as assert from 'uvu/assert';
 import { checkIncludes, checkProperty, checkMembers } from './matchers';
-import {
-  isPlainObject,
-  isEmpty,
-  isMap,
-  isSet,
-  isString,
-  isArray,
-} from 'lodash';
+import isEmpty from 'lodash/isEmpty';
+import isMap from 'lodash/isMap';
+import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
+import isArray from 'lodash/isArray';
+import isSet from 'lodash/isSet';
 import { deepEqual, identical, match as isMatch } from '@sinonjs/samsam';
 import { isSpyFn } from './utils';
 
