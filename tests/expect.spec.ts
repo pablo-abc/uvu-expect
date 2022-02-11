@@ -12,7 +12,8 @@ function assertThrows(fn: () => void, matcher?: any) {
     try {
       fn();
     } catch (err: any) {
-      if (!(err instanceof assert.Assertion)) return;
+      if (!(err instanceof assert.Assertion) && !(err instanceof TypeError))
+        return;
       throw new Error(err.message);
     }
   }, matcher);
@@ -31,6 +32,7 @@ Expect('equal assertion', () => {
   expect('test').to.not.equal('wrong');
   assertThrows(() => expect('test').to.equal('wrong'));
   expect({ deep: 'value' }).to.deep.equal({ deep: 'value' });
+  expect({ deep: 'value' }).to.deep.equal({ deep: expect.match.string });
   assertThrows(() =>
     expect({ deep: 'value' }).not.deep.equal({ deep: 'value' })
   );
@@ -169,6 +171,35 @@ Expect('asserts match', () => {
   expect('zaphod and arthur').to.match(/and/);
   expect('zaphod').to.not.match(/arthur/);
   expect('zaphod').to.not.match('arthur');
+  expect('zaphod').to.match(expect.match('aphod'));
+  expect('zaphod').to.match(expect.match(/aphod/));
+  expect('1').to.match(expect.match(1));
+  expect({
+    deep: 'string',
+    num: 1,
+    another: 'string',
+    arr: ['hello', 'goodbye'],
+    obj: {
+      prop: 'value',
+    },
+  }).to.match({
+    deep: expect.match.string,
+    num: expect.match.number,
+    arr: expect.match.array.contains(['hello']),
+    obj: expect.match({
+      prop: expect.match.string,
+    }),
+  });
+  assertThrows(() => {
+    expect({ deep: 'string', num: 1, another: 'string' }).to.match({
+      deep: expect.match.number,
+      num: expect.match.string,
+    });
+  });
+  expect(['hello', 'goodbye', 'sup']).to.match(['goodbye', 'sup']);
+  assertThrows(() =>
+    expect(['hello', 'goodbye', 'sup']).to.match(['hello', 'sup'])
+  );
 });
 
 Expect('assert object and array include', () => {
@@ -190,6 +221,7 @@ Expect('assert object and array include', () => {
   expect([{}]).to.deeply.contain({});
   expect(['arthur']).to.match(/art/);
   assertThrows(() => expect(['arthur']).to.match(/marvin/));
+  expect([[{ a: 1 }], [2, 3]]).to.deep.contain({ a: 1 });
 });
 
 Expect('asserts property', () => {
@@ -290,7 +322,7 @@ Expect('asserts on empty', () => {
   assertThrows(() => expect(() => undefined).to.be.empty);
 });
 
-Expect('asserts called function', () => {
+Expect('asserts called mock function', () => {
   const tspy = spy();
   const sspy = sinon.fake();
   assertThrows(() => expect(() => undefined).to.have.not.been.called);
@@ -302,6 +334,7 @@ Expect('asserts called function', () => {
   tspy(1, 2, 3);
   sspy(1, 2, 3);
   expect(tspy).to.have.been.called.with(1, 2, 3);
+  expect(tspy).to.have.been.last.called.with.args.that.have.members([1, 2, 3]);
   expect(tspy).to.have.been.called.but.not.with(1, 2, 4);
   expect(tspy).to.have.not.been.calledWith(1, 2, 4);
   expect(tspy).to.have.been.called.times(1);
@@ -335,10 +368,19 @@ Expect('asserts called function', () => {
   expect(sspy).to.have.been.nth(1).called.with(1, 2, 3);
   expect(sspy).to.have.been.last.called.with(2, 3, [1]);
   assertThrows(() => expect(sspy).to.have.been.last.called.with(1, 2, 3));
-  tspy();
-  sspy();
+  tspy({ value: 'string', num: 1 });
+  sspy({ value: 'string', num: 1 });
   expect(tspy).to.have.been.called.thrice;
   expect(sspy).to.have.been.called.thrice;
+  expect(tspy).to.have.been.last.called.with(
+    expect.match({
+      value: expect.match.string,
+    })
+  );
+  expect(tspy).to.have.been.last.called.with({
+    value: expect.match.string.and(expect.match('string')),
+    num: expect.match.number,
+  });
 });
 
 Expect.run();

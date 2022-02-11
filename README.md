@@ -125,6 +125,8 @@ expect(null).to.not.be.undefined;
 
 Checks if the your target is equal (===) to the value supplied. You can add `.deep` before to check for deep equality.
 
+When checking deep equality, you can use [matchers](#matchers) to make the comparison less strict.
+
 Alias: `.equals`.
 
 ```javascript
@@ -172,7 +174,9 @@ expect([{}]).to.deeply.contain({});
 
 #### .match
 
-Asserts that your target contains the supplied sub string, or matches the supplied regular expression.
+Asserts that your target contains the supplied sub string, or matches the supplied regular expression. If the target provided is either an object or array, it will assert that the value "matches" the target,
+
+You can use [matchers](#matchers) to make the comparison less strict.
 
 Alias: `.matches`
 
@@ -180,6 +184,8 @@ Alias: `.matches`
 expect('zaphod and arthur').to.match('zaphod');
 expect('zaphod and arthur').to.match(/arthur/);
 expect('zaphod and arthur').to.not.match(/marvin/);
+expect({ value: 'string', num: 1 }).to.match({ value: 'string' });
+expect(['hello', 'hi', 'goodbye']).to.match(['hi', 'goodbye']);
 ```
 
 <hr />
@@ -369,6 +375,33 @@ expect(mockFn).to.have.been.nth(1).called.with(1);
 expect(mockFn).to.have.been.nth(2).called.not.with(1, 2, 3);
 expect(mockFn).to.have.not.been.nth(2).calledWith(1, 2, 3);
 expect(mockFn).to.have.been.last.called.with(1, 2, 3);
+```
+
+### Matchers
+
+`.deep.equal`, `.match`, `.contain` and `.with` (for function arguments) can be made less strict by using matchers. This package comes bundled with [Sinon's matchers](https://sinonjs.org/releases/v13/matchers/) via Samsam. You can access them directly from `expect`. Its useage is the same as shown on Sinon's documentation, but instead of using `sinon.*` use `expect.*`.
+
+```javascript
+expect({
+  deep: 'string',
+  num: 1,
+  another: 'string',
+  arr: ['hello', 'goodbye'],
+  obj: {
+    prop: 'value',
+  },
+}).to.match({
+  deep: expect.match.string,
+  num: expect.match.number,
+  arr: expect.match.array.contains(['hello']),
+  obj: expect.match({
+    prop: expect.match.string,
+  }),
+});
+expect('zaphod and arthur').to.match(expect.match('and arthur'));
+expect('zaphod').to.match(expect.match('aphod'));
+expect('zaphod').to.match(expect.match(/aphod/));
+expect('1').to.match(expect.match(1));
 ```
 
 ## Adding custom assertions (plugins)

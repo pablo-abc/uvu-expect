@@ -1,6 +1,6 @@
 {
   "name": "uvu-expect",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Chai like BDD assertions for uvu",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -40,6 +40,7 @@
     "uvu": "^0.5.3"
   },
   "dependencies": {
+    "@sinonjs/samsam": "^6.1.1",
     "lodash": "^4.17.21",
     "tslib": "^2.3.1"
   },

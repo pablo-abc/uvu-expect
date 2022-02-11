@@ -1,4 +1,4 @@
-import type { Context, Property, SpyFn } from './types';
+import type { Context, Property } from './types';
 import * as assert from 'uvu/assert';
 import { checkIncludes, checkProperty, checkMembers } from './matchers';
 import {
@@ -8,13 +8,31 @@ import {
   isSet,
   isString,
   isArray,
-  isEqual,
 } from 'lodash';
+import { deepEqual, identical, match as isMatch } from '@sinonjs/samsam';
 import { isSpyFn } from './utils';
 
 export const not: Property = {
   onAccess(this: Context) {
     this.flag('negate', true);
+  },
+};
+
+export const match: Property = {
+  onCall(this: Context, value: any) {
+    const actual = this.flag('object') as object;
+    const negate = this.flag('negate');
+    this.assert(
+      isMatch(actual, value),
+      'Expected values to match:',
+      'Expected values not to match',
+      {
+        operator: negate ? 'not.match' : 'match',
+        expects: value,
+        actual,
+        showDiff: !negate,
+      }
+    );
   },
 };
 
@@ -69,7 +87,7 @@ export const length: Property = {
     const actual = this.flag('actual');
     const n = this.flag('length');
     if (typeof n !== 'number') {
-      return assert.unreachable(
+      throw new TypeError(
         `Expected "${typeof actual}" to be an "array", "string", "map" or "set`
       );
     }
@@ -149,24 +167,35 @@ export const ok: Property = {
 };
 
 export const equal: Property = {
-  onCall(this: Context, Expected: any) {
+  onCall(this: Context, expected: any) {
     const actual = this.flag('object');
     const deep = this.flag('deep');
     const not = this.flag('negate');
     if (deep) {
-      if (not) {
-        assert.not.equal(actual, Expected);
-      } else {
-        assert.equal(actual, Expected);
-      }
+      this.assert(
+        deepEqual(actual, expected),
+        'Expected values to be deeply equal:',
+        'Expected values not to be deeply equal',
+        {
+          operator: not ? 'not.equal' : 'equal',
+          expects: expected,
+          actual,
+          showDiff: !not,
+        }
+      );
     } else {
-      if (not) {
-        assert.is.not(actual, Expected);
-      } else {
-        assert.is(actual, Expected);
-      }
+      this.assert(
+        identical(actual, expected) || actual === expected,
+        'Expected values to be strictly equal:',
+        'Expected values not to be strictly equal',
+        {
+          operator: not ? 'is.not' : 'is',
+          expects: expected,
+          actual,
+          showDiff: !not,
+        }
+      );
     }
-    this.clearFlags();
   },
 };
 
@@ -335,7 +364,7 @@ export const empty: Property = {
       !isString(actual) &&
       !isSet(actual)
     ) {
-      assert.unreachable('Target must be a string, array, object, map or set');
+      throw new TypeError('Target must be a string, array, object, map or set');
     }
     this.assert(
       isEmpty(actual),
@@ -422,13 +451,11 @@ export const calledWith: Property = {
     }
     if (callNumber) {
       this.assert(
-        isEqual(calls[callNumber - 1], args),
-        'Expected function to have been called with #{exp} on ' + last
-          ? 'last call'
-          : `call number ${callNumber}`,
-        'Expected function not to have been called with #{exp} on ' + last
-          ? 'last call'
-          : `call number ${callNumber}`,
+        deepEqual(calls[callNumber - 1], args),
+        'Expected function to have been called with #{exp} on ' +
+          (last ? 'last call' : `call number ${callNumber}`),
+        'Expected function not to have been called with #{exp} on ' +
+          (last ? 'last call' : `call number ${callNumber}`),
         {
           actual: calls[callNumber - 1],
           expects: args,
@@ -437,11 +464,34 @@ export const calledWith: Property = {
       );
     } else {
       this.assert(
-        calls.some((a) => isEqual(a, args)),
+        calls.some((a) => deepEqual(a, args)),
         'Expected function to have been called with #{exp}',
         'Expected function not to have been called with #{exp}',
         { expects: args }
       );
+    }
+  },
+};
+
+export const args: Property = {
+  onAccess(this: Context) {
+    const actual = this.flag('object');
+    const last = this.flag('last');
+    if (!isSpyFn(actual)) return;
+    let calls: any[][];
+    if ('getCalls' in actual) {
+      calls = actual.getCalls().map((c) => c.args);
+    } else {
+      calls = actual.calls;
+    }
+    const callNumber = last ? calls.length : (this.flag('nth') as number);
+    if (!actual.called || (callNumber && calls.length < callNumber)) {
+      assert.unreachable('The function has not been called enough times');
+    }
+    if (callNumber) {
+      this.flag('object', calls[callNumber - 1]);
+    } else {
+      this.flag('object', calls);
     }
   },
 };

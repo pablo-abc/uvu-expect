@@ -1,5 +1,5 @@
 import * as defaultProperties from './properties';
-import type { Context, Property } from './types';
+import type { Context, Property, Expect } from './types';
 export type {
   Context as ExpectContext,
   Property as ExpectProperty,
@@ -7,6 +7,7 @@ export type {
 } from './types';
 import { assert } from './custom-assert';
 import { Assertion } from 'uvu/assert';
+import { createMatcher } from '@sinonjs/samsam';
 
 const {
   beTrue,
@@ -24,8 +25,7 @@ const properties: Record<string, Property | undefined> = {
   includes: initialProperties.include,
   contain: initialProperties.include,
   contains: initialProperties.include,
-  match: initialProperties.include,
-  matches: initialProperties.include,
+  matches: initialProperties.match,
   a: initialProperties.type,
   an: initialProperties.type,
   lengthOf: initialProperties.length,
@@ -52,7 +52,7 @@ function tryWithStack(fn: () => void, captured: { stack?: string }) {
   }
 }
 
-export function expect(value: any) {
+export function expectFn(value: any) {
   const captured = {};
 
   Error.captureStackTrace?.(captured, expect);
@@ -102,6 +102,10 @@ export function expect(value: any) {
 
   return proxy;
 }
+
+export const expect: Expect = Object.assign(expectFn, {
+  match: createMatcher as any,
+});
 
 function addProperty(names: string | string[], handler: Property): void {
   names = Array.isArray(names) ? names : [names];

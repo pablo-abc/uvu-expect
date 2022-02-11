@@ -1,4 +1,5 @@
-import type { SinonSpyCall } from 'sinon';
+import type { SinonSpyCall, SinonMatch } from 'sinon';
+
 export type Assert = (
   this: Context,
   condition: boolean,
@@ -38,3 +39,7 @@ export type SinonSpy = {
 } & Function;
 
 export type SpyFn = TinySpy | SinonSpy;
+
+export type Expect = ((value: any) => any) & {
+  match: SinonMatch;
+};

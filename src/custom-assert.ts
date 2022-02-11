@@ -1,7 +1,7 @@
 import type { Context } from './types';
 import { Assertion } from 'uvu/assert';
 import { compare } from 'uvu/diff';
-import { formatMessage } from './utils';
+import { formatMessage, stringify } from './utils';
 
 export function assert(
   this: Context,
@@ -26,8 +26,10 @@ export function assert(
       : formatMessage(message, object, actual ?? object, expects),
     generated: true,
     operator: operator ?? '',
-    expects,
+    expects: expects,
     actual: actual ?? object,
-    details: showDiff ? compare(actual ?? object, expects) : undefined,
+    details: showDiff
+      ? compare(stringify(actual ?? object, true), stringify(expects, true))
+      : undefined,
   });
 }

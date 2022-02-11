@@ -8,7 +8,7 @@ const prod = process.env.NODE_ENV === 'production';
 
 export default {
   input: './src/index.ts',
-  external: ['chai'],
+  external: ['uvu', 'uvu/assert'],
   output: [
     {
       file: pkg.main,
