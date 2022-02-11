@@ -96,7 +96,9 @@ export function expectFn(
 
   Error.captureStackTrace?.(captured, expect);
 
-  timer.timeout = setupNoAssertionWarning(captured);
+  if (!disableNoAssertionWarning) {
+    timer.timeout = setupNoAssertionWarning(captured);
+  }
 
   function abortNoAssertionWarning() {
     if (timer.timeout) clearTimeout(timer.timeout);
