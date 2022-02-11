@@ -454,8 +454,8 @@ this.assert(
 Adds an assertion on top of other assertions executed by the property (if it has any). The first argument is the name of the property to add. It can be an array of string if you'd like the property to have "aliases". The second argument is a property object (an object with an `onAccess` and `onCall` functions).
 
 ```javascript
-extend(({ replaceProperty }) => {
-  replaceProperty('zaphod', {
+extend(({ addProperty }) => {
+  addProperty('zaphod', {
     onAccess() {
       const actual = this.flag('object');
       this.assert(
@@ -468,14 +468,14 @@ extend(({ replaceProperty }) => {
 });
 ```
 
-### overwriteProperty
+### replaceProperty
 
 Allows you to replace a property by providing you with the original property value (the `onAccess` and `onCall` functions). It expects the name (or names if you want to add aliases) of the property to add as a first argument, and a function that will receive the original property as a second argument. This function should return a new property.
 
 ```javascript
-extend(({ extendProperty }) => {
-  // We will extend both aliases
-  extendProperty(['equal', 'equals'], (handler) => {
+extend(({ replaceProperty }) => {
+  // We will replace both aliases
+  replaceProperty(['equal', 'equals'], (handler) => {
     return {
       onCall(value) {
         if (value === 'zaphod') throw new Error('no');

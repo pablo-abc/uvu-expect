@@ -13,12 +13,19 @@ export function assert(
     actual,
     operator,
     showDiff,
-  }: { expects?: any; actual?: any; showDiff?: boolean; operator?: string } = {}
+    keepFlags,
+  }: {
+    expects?: any;
+    actual?: any;
+    showDiff?: boolean;
+    operator?: string;
+    keepFlags?: boolean;
+  } = {}
 ) {
   const negate = this.flag('negate');
   const object = this.flag('object');
   const passed = negate ? !condition : condition;
-  this.clearFlags();
+  if (!keepFlags) this.clearFlags();
   if (passed) return;
   throw new Assertion({
     message: negate

@@ -10,6 +10,7 @@ export type Assert = (
     actual?: any;
     showDiff?: boolean;
     operator?: string;
+    keepFlags?: boolean;
   }
 ) => void;
 

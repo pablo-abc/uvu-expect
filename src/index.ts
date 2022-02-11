@@ -63,6 +63,7 @@ export function expectFn(value: any) {
     return value;
   }
   function clearFlags(this: Context) {
+    if (this.flag('preventClear')) return;
     const actual = internalFlags.get('object');
     internalFlags.clear();
     internalFlags.set('object', actual);
@@ -116,12 +117,16 @@ function addProperty(names: string | string[], handler: Property): void {
     } else {
       properties[name] = {
         onAccess(this: Context) {
-          originalHandler.onAccess?.call(this);
+          if (originalHandler.onAccess) this.flag('preventClear', true);
           handler.onAccess?.call(this);
+          this.flag('preventClear', false);
+          originalHandler.onAccess?.call(this);
         },
         onCall(this: Context, ...args: any[]) {
-          originalHandler.onCall?.apply(this, args);
+          if (originalHandler.onCall) this.flag('preventClear', true);
           handler.onCall?.apply(this, args);
+          this.flag('preventClear', false);
+          originalHandler.onCall?.apply(this, args);
         },
       };
     }
