@@ -70,17 +70,19 @@ function setupNoAssertionWarning(captured: {
   assertion: string[];
 }) {
   return setTimeout(() => {
-    console.warn(
+    const message =
+      '\n' +
       kleur
         .bold()
         .underline()
-        .red('No assertion was done on one of your `expect` calls.')
-    );
-    console.warn('');
-    console.warn('Make sure you have no typos on your assertion:');
-    console.warn(kleur.yellow('expect(...).' + captured.assertion.join('.')));
-    console.warn('');
-    console.warn(kleur.gray(captured.stack ?? ''));
+        .red('No assertion was done on one of your `expect` calls.') +
+      '\n\n' +
+      'Make sure you have no typos on your assertion:' +
+      '\n' +
+      kleur.yellow('expect(...)' + captured.assertion.join('.')) +
+      '\n\n' +
+      kleur.gray(captured.stack ?? '');
+    console.warn(message);
   });
 }
 
