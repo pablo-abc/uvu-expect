@@ -106,6 +106,20 @@ await expect(Promise.reject(false)).to.reject.to.false;
 
 <hr />
 
+#### .deep
+
+Modifies the following assertion so it uses deep equality instead of strict equality. Can be used with `.equal`, `.contain`, `.members`.
+
+Alias: `.deeply`
+
+```javascript
+expect({ a: { b: 'c' }}).to.deep.equal({ a: { b: 'c' } });
+expect({ a: { b: 'c' }}).to.deeply.contain({ b: 'c' });
+expect([{ a: 1 }, { b: 2 }, { c: 3 }]).to.contain.deep.members([{ b: 2 }, { a: 1 }]);
+```
+
+<hr />
+
 #### Checking if a value is of a specific type
 
 We offer the properties `.string`, `.number`, `.boolean`, `.object`, `.array` and `.function`.
