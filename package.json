@@ -9,6 +9,7 @@
     "build": "rimraf dist && NODE_ENV=production rollup -c",
     "dev": "rollup -cw",
     "test": "uvu -r tsm tests -i common",
+    "prepublishOnly": "pnpm i && pnpm test:ci && pnpm build",
     "test:ci": "nyc pnpm test"
   },
   "author": "Pablo Berganza <pablo@berganza.dev>",
