@@ -6,7 +6,7 @@ export type {
   Property as ExpectProperty,
   Assert as ExpectAssert,
 } from './types';
-import { assert } from './custom-assert';
+import { assert, rejectAssertion } from './custom-assert';
 import { Assertion } from 'uvu/assert';
 import { createMatcher } from '@sinonjs/samsam';
 
@@ -49,7 +49,7 @@ function tryWithStack(
   try {
     fn();
   } catch (err) {
-    clearTimeout(this.timeout);
+    this.abortNoAssertionWarning();
     if (err instanceof Assertion) {
       const operator = captured.assertion
         .map((a) => a.replace('(...)', ''))
@@ -63,17 +63,11 @@ function tryWithStack(
   }
 }
 
-export function expectFn(
-  value: any,
-  { disableNoAssertionWarning } = { disableNoAssertionWarning: false }
-) {
-  const captured: { stack?: string; assertion: string[] } = {
-    assertion: [],
-  };
-
-  Error.captureStackTrace?.(captured, expect);
-  const timeout = setTimeout(() => {
-    if (disableNoAssertionWarning) return;
+function setupNoAssertionWarning(captured: {
+  stack?: string;
+  assertion: string[];
+}) {
+  return setTimeout(() => {
     console.warn(
       kleur
         .bold()
@@ -86,6 +80,25 @@ export function expectFn(
     console.warn('');
     console.warn(kleur.gray(captured.stack ?? ''));
   });
+}
+
+export function expectFn(
+  value: any,
+  { disableNoAssertionWarning } = { disableNoAssertionWarning: false }
+) {
+  const accessed: (string | any[])[] = [];
+  const timer: { timeout?: NodeJS.Timeout } = {};
+  const captured: { stack?: string; assertion: string[] } = {
+    assertion: [],
+  };
+
+  Error.captureStackTrace?.(captured, expect);
+
+  timer.timeout = setupNoAssertionWarning(captured);
+
+  function abortNoAssertionWarning() {
+    if (timer.timeout) clearTimeout(timer.timeout);
+  }
 
   const internalFlags = new Map();
   function flag(key: string, value: any) {
@@ -101,14 +114,100 @@ export function expectFn(
   }
   const chainContext = {
     flag,
-    timeout,
+    abortNoAssertionWarning,
   } as Context;
   chainContext.clearFlags = clearFlags.bind(chainContext);
   chainContext.assert = assert.bind(chainContext);
   internalFlags.set('object', value);
+
+  let resolve: (v: any) => void;
+  let reject: (v: any) => void;
+  function executeValidations() {
+    for (let i = 0; i < accessed.length; i += 1) {
+      const name = accessed[i] as string;
+      let args: string | any[] | undefined = accessed[i + 1];
+      if (Array.isArray(args)) {
+        i += 1;
+      } else {
+        args = undefined;
+      }
+      if (args) {
+        proxy[name](...args);
+      } else {
+        proxy[name];
+      }
+    }
+  }
+
+  const promisifiedProxy: any = new Proxy(
+    Object.assign(
+      new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      }),
+      properties
+    ),
+    {
+      get(target, prop) {
+        if (typeof prop !== 'string') return;
+        if (prop === 'then') return target.then.bind(target);
+        if (prop === 'catch') return target.catch.bind(target);
+        if (prop === 'finally') return target.finally.bind(target);
+        accessed.push(prop);
+        return new Proxy(
+          function (...args: unknown[]) {
+            accessed.push(args);
+            return promisifiedProxy;
+          },
+          {
+            get(_, prop) {
+              return promisifiedProxy[prop];
+            },
+          }
+        );
+      },
+    }
+  );
+
   const proxy: any = new Proxy(properties, {
     get(target, prop) {
       if (typeof prop !== 'string') return;
+      if (['resolves', 'resolve', 'rejects', 'reject'].includes(prop)) {
+        const actual = internalFlags.get('object') as Promise<any>;
+        abortNoAssertionWarning();
+        if (
+          typeof actual !== 'object' ||
+          !('then' in actual) ||
+          !('catch' in actual) ||
+          !('finally' in actual)
+        ) {
+          throw new TypeError('Expected target to be a promise');
+        }
+        actual
+          .then((v) => {
+            if (/reject/.test(prop))
+              return reject(
+                rejectAssertion('Expected promise to reject', prop, captured)
+              );
+            internalFlags.set('object', v);
+          })
+          .catch((v) => {
+            if (/resolve/.test(prop))
+              return reject(
+                rejectAssertion('Expected promise to resolve', prop, captured)
+              );
+            internalFlags.set('object', v);
+          })
+          .finally(() => {
+            try {
+              executeValidations();
+              resolve(undefined);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        return promisifiedProxy;
+      }
       captured.assertion.push(prop);
       const property = target[prop];
       tryWithStack.call(

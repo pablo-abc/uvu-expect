@@ -80,6 +80,32 @@ expect({ a: 1 }).to.not.be.empty;
 
 <hr />
 
+#### .resolves
+
+Checks whether a promise resolves. Every assertion done after this happens on the resolved value. You must await `expect` when using this property.
+
+Alias: `.resolve`
+
+```javascript
+await expect(Promise.resolve(true)).resolves.to.true;
+await expect(Promise.resolve(false)).to.resolve.to.false;
+```
+
+<hr />
+
+#### .rejects
+
+Checks whether a promise rejects. Every assertion done after this happens on the rejected value. You must await `expect` when using this property.
+
+Alias: `.reject`
+
+```javascript
+await expect(Promise.reject(true)).rejects.to.true;
+await expect(Promise.reject(false)).to.reject.to.false;
+```
+
+<hr />
+
 #### Checking if a value is of a specific type
 
 We offer the properties `.string`, `.number`, `.boolean`, `.object`, `.array` and `.function`.
@@ -403,6 +429,19 @@ expect('zaphod').to.match(expect.match('aphod'));
 expect('zaphod').to.match(expect.match(/aphod/));
 expect('1').to.match(expect.match(1));
 ```
+
+## Preventing accidentally not doing any assertions
+
+Since we allow to use anything as a chain for assertions (except symbols), it is possible for you to accidentally not assert anything on your target, which would make your tests always pass. In order to mitigate this, this package will show a warning when no assertions are done after an `expect` with a message like this on your console:
+
+```
+No assertion was done on one of your `expect` calls.
+
+Make sure you have no typos on your assertion:
+expect(...).to.do.nothing
+```
+
+Your tests will still pass, but it will be obvious if you missed anything.
 
 ## Adding custom assertions (plugins)
 

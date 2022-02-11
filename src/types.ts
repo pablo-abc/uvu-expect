@@ -18,7 +18,7 @@ export type Context = {
   flag(key: string, value?: any): unknown;
   clearFlags(): void;
   assert: Assert;
-  timeout: NodeJS.Timeout;
+  abortNoAssertionWarning(): void;
 };
 
 export type Property = {

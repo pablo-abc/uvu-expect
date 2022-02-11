@@ -19,11 +19,49 @@ function assertThrows(fn: () => void, matcher?: any) {
   }, matcher);
 }
 
-Expect('tests ok assertion', () => {
+async function assertRejects(fn: () => Promise<void>, matcher?: any) {
+  try {
+    await fn();
+  } catch (err: any) {
+    if (!(err instanceof assert.Assertion) && !(err instanceof TypeError)) {
+      assert.unreachable('Should have rejected');
+    }
+    if (matcher) assert.match(err.message, matcher);
+  }
+}
+
+Expect.before.each(() => {
+  sinon.restore();
+});
+
+Expect('tests ok assertion', async () => {
   expect(null).to.not.be.ok;
   assertThrows(() => expect(null).to.be.ok, /Expected value to be truthy/);
   expect('truthy').to.be.ok;
   assertThrows(() => expect('truthy').to.not.be.ok);
+  assertThrows(
+    () => expect('truthy').to.resolve,
+    /Expected target to be a promise/
+  );
+  await expect(Promise.resolve({ hello: 'hi' })).resolves.to.ok;
+  await assertRejects(
+    () => expect(Promise.resolve({ hello: 'hi' })).resolves.to.not.ok,
+    /Expected value to be falsey/
+  );
+  await assertRejects(
+    () => expect(Promise.resolve({ hello: 'hi' })).rejects,
+    /Expected promise to reject/
+  );
+  await assertRejects(
+    () => expect(Promise.reject({ hello: 'hi' })).resolves,
+    /Expected promise to resolve/
+  );
+  await expect(Promise.resolve(null)).resolves.to.not.ok;
+  await expect(Promise.resolve(null)).to.resolve.to.not.ok;
+  await expect(Promise.reject({ hello: 'hi' })).rejects.to.ok.and.deep.equal({
+    hello: expect.match.string,
+  });
+  await expect(Promise.reject(null)).rejects.to.not.ok;
 });
 
 Expect('equal assertion', () => {
@@ -91,7 +129,7 @@ Expect('extends expect', () => {
     addProperty(['alias1', 'alias2'], {
       onCall,
       onAccess(this: any) {
-        clearTimeout(this.timeout);
+        this.abortNoAssertionWarning();
         onAccess.call(this);
       },
     });
@@ -102,7 +140,7 @@ Expect('extends expect', () => {
           onCall(value);
         },
         onAccess(this: any) {
-          clearTimeout(this.timeout);
+          this.abortNoAssertionWarning();
           handler.onAccess?.();
           onAccess();
         },
@@ -163,13 +201,10 @@ Expect('extends expect', () => {
 });
 
 Expect('only proxies string props and warns on no assertion', async () => {
-  const mockWarn = sinon.fake();
-  const origWarn = console.warn;
-  console.warn = mockWarn;
-  assert.is(expect({})[Symbol()], undefined);
+  const mockWarn = sinon.spy(console, 'warn');
+  assert.is(expect({}).on.symbol[Symbol()], undefined);
   await new Promise((r) => setTimeout(r));
 
-  console.warn = origWarn;
   expect(mockWarn).to.have.been.called;
 });
 

@@ -22,7 +22,7 @@ export function assert(
     keepFlags?: boolean;
   } = {}
 ) {
-  clearTimeout(this.timeout);
+  this.abortNoAssertionWarning();
   const negate = this.flag('negate');
   const object = this.flag('object');
   const passed = negate ? !condition : condition;
@@ -40,4 +40,20 @@ export function assert(
       ? compare(stringify(actual ?? object, true), stringify(expects, true))
       : undefined,
   });
+}
+
+export function rejectAssertion(
+  message: string,
+  operator: string,
+  captured: { stack?: string }
+) {
+  const error = new Assertion({
+    message,
+    generated: false,
+    operator,
+    expects: undefined,
+    actual: undefined,
+  });
+  error.stack = captured.stack;
+  return error;
 }
