@@ -302,9 +302,15 @@ export type ExtendExpectHelpers = {
   replaceProperty: typeof replaceProperty;
 };
 
-export function extend(extension: (helpers: ExtendExpectHelpers) => void) {
+export type ExpectExtension = (helpers: ExtendExpectHelpers) => void;
+
+const loadedExtensions = new Set();
+
+export function extend(extension: ExpectExtension) {
+  if (loadedExtensions.has(extension)) return;
   extension({
     addProperty,
     replaceProperty,
   });
+  loadedExtensions.add(extension);
 }

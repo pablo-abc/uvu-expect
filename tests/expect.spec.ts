@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 import { spy } from 'tinyspy';
 import * as assert from 'uvu/assert';
 import { suite } from 'uvu';
-import type { ExpectContext } from '../src';
+import type { ExpectContext, ExpectExtension } from '../src';
 import { expect, extend } from '../src';
 
 const Expect = suite('expect');
@@ -127,42 +127,52 @@ Expect('extends expect', () => {
   const onCall = sinon.fake();
   const onAccess = sinon.fake();
   const zaphodValidation = sinon.fake();
-  extend(({ addProperty, replaceProperty }) => {
-    addProperty('test', { onCall, onAccess });
-    addProperty(['equals', 'equal'], { onCall, onAccess });
-    addProperty(['alias1', 'alias2'], {
-      onCall,
-      onAccess(this: any) {
-        this.abortNoAssertionWarning();
-        onAccess.call(this);
-      },
-    });
-    replaceProperty(['test'], (handler) => {
-      return {
-        onCall(value: any) {
-          handler.onCall?.();
-          onCall(value);
-        },
+  const extension: ExpectExtension = sinon.fake(
+    ({ addProperty, replaceProperty }) => {
+      addProperty('test', { onCall, onAccess });
+      addProperty(['equals', 'equal'], { onCall, onAccess });
+      addProperty(['alias1', 'alias2'], {
+        onCall,
         onAccess(this: any) {
           this.abortNoAssertionWarning();
-          handler.onAccess?.();
-          onAccess();
+          onAccess.call(this);
         },
-      };
-    });
+      });
+      replaceProperty(['test'], (handler) => {
+        return {
+          onCall(value: any) {
+            handler.onCall?.();
+            onCall(value);
+          },
+          onAccess(this: any) {
+            this.abortNoAssertionWarning();
+            handler.onAccess?.();
+            onAccess();
+          },
+        };
+      });
 
-    replaceProperty('zaphod', () => ({
-      onAccess(this: ExpectContext) {
-        const actual = this.flag('object');
-        zaphodValidation();
-        this.assert(
-          actual === 'zaphod',
-          'expected to be zaphod',
-          'expected to not be zaphod'
-        );
-      },
-    }));
-  });
+      replaceProperty('zaphod', () => ({
+        onAccess(this: ExpectContext) {
+          const actual = this.flag('object');
+          zaphodValidation();
+          this.assert(
+            actual === 'zaphod',
+            'expected to be zaphod',
+            'expected to not be zaphod'
+          );
+        },
+      }));
+    }
+  );
+
+  // Checks that an extension can't be loaded more than once
+  expect(extension).to.have.not.been.called;
+  extend(extension);
+  expect(extension).to.have.been.called.once;
+  extend(extension);
+  expect(extension).to.have.been.called.once;
+
   expect('value').to.not.equal('not value');
   expect(onCall).to.have.been.called.once;
   expect(onAccess).to.have.been.called.once;
