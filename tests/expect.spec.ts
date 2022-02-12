@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers/promises';
 import * as sinon from 'sinon';
 import { spy } from 'tinyspy';
 import * as assert from 'uvu/assert';
@@ -205,9 +206,15 @@ Expect('extends expect', () => {
 });
 
 Expect('only proxies string props and warns on no assertion', async () => {
-  const mockWarn = sinon.spy(console, 'warn');
+  const warn = console.warn;
+  const mockWarn = sinon
+    .stub(console, 'warn')
+    .callsFake((...args: string[]) => {
+      if (args[0]?.includes('expect(...).on.symbol')) return;
+      warn.apply(console, args);
+    });
   assert.is(expect({}).on.symbol[Symbol()], undefined);
-  await new Promise((r) => setTimeout(r));
+  await setTimeout();
 
   expect(mockWarn).to.have.been.called;
 });

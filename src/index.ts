@@ -79,7 +79,7 @@ function setupNoAssertionWarning(captured: {
       '\n\n' +
       'Make sure you have no typos on your assertion:' +
       '\n' +
-      kleur.yellow('expect(...)' + captured.assertion.join('.')) +
+      kleur.yellow('expect(...).' + captured.assertion.join('.')) +
       '\n\n' +
       kleur.gray(captured.stack ?? '');
     console.warn(message);
