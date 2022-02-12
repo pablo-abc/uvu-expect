@@ -1,4 +1,3 @@
-import { setTimeout } from 'node:timers/promises';
 import * as sinon from 'sinon';
 import { spy } from 'tinyspy';
 import * as assert from 'uvu/assert';
@@ -214,7 +213,7 @@ Expect('only proxies string props and warns on no assertion', async () => {
       warn.apply(console, args);
     });
   assert.is(expect({}).on.symbol[Symbol()], undefined);
-  await setTimeout();
+  await new Promise((r) => setTimeout(r));
 
   expect(mockWarn).to.have.been.called;
 });
