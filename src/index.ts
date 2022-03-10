@@ -22,6 +22,7 @@ const {
 
 const properties: Record<string, Property | undefined> = {
   ...initialProperties,
+  throw: initialProperties.throws,
   satisfies: initialProperties.satisfy,
   equals: initialProperties.equal,
   includes: initialProperties.include,

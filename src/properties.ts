@@ -525,3 +525,23 @@ export const beNaN: Property = {
     );
   },
 };
+
+export const throws: Property = {
+  onAccess(this: Context) {
+    const actual = this.flag('object');
+    const negated = this.flag('negate');
+    if (typeof actual !== 'function') {
+      return assert.unreachable('The value must be a function');
+    }
+    try {
+      actual();
+      if (!negated) return assert.unreachable('Expected function to throw');
+    } catch (err) {
+      if (err instanceof assert.Assertion) throw err;
+      this.flag('object', err);
+      if (negated) return assert.unreachable('Expected function not to throw');
+    }
+    this.abortNoAssertionWarning();
+    this.clearFlags();
+  },
+};

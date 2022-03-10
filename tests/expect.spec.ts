@@ -452,4 +452,27 @@ Expect('asserts called mock function', () => {
   });
 });
 
+Expect('assert on function that throws', () => {
+  const throws = sinon.fake(() => {
+    throw new Error('I am a teapot');
+  });
+  const notThrows = sinon.fake();
+  expect(throws)
+    .to.throw.instanceOf(Error)
+    .with.property('message')
+    .that.equals('I am a teapot');
+
+  expect(throws)
+    .to.be.a.function.that.throws.instanceOf(Error)
+    .with.property('message')
+    .that.equals('I am a teapot');
+  assertThrows(() => {
+    expect(throws).to.not.throw;
+  }, /Expected function not to throw/);
+  expect(notThrows).to.not.throw;
+  assertThrows(() => {
+    expect(notThrows).to.throw;
+  }, /Expected function to throw/);
+});
+
 Expect.run();

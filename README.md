@@ -106,6 +106,25 @@ await expect(Promise.reject(false)).to.reject.to.false;
 
 <hr />
 
+### .throws
+
+Checks whether a function throws. Every assertion done after this (if not negated) happens on the thrown value.
+
+Alias: `.throw`
+
+```javascript
+const throwFn = () => {
+  throw new Error('I am a teapot');
+};
+
+expect(throwFn)
+  .to.throw.instanceOf(Error)
+  .with.property('message')
+  .that.equals('I am a teapot');
+```
+
+<hr />
+
 #### .deep
 
 Modifies the following assertion so it uses deep equality instead of strict equality. Can be used with `.equal`, `.contain`, `.members`.
